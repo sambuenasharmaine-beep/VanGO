@@ -55,7 +55,54 @@ export function PassengerDashboard() {
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   // A staff status change or a mock payment reaches this screen without a reload.
   useLiveTables(["bookings", "notifications"], load);
-  return <PassengerShell><section className="passenger-greeting"><div><span>Welcome back,</span><h1>{profile?.full_name || "Passenger"}</h1></div><Link className="weather-chip" href="/passenger/alerts">{unread} unread</Link></section><div className="passenger-real-actions"><Link className="button button-primary large full" href="/passenger/trips">Search a new trip</Link></div><div className="passenger-dashboard-grid"><section className="mobile-section"><div className="section-mini-title"><h2>Recent bookings</h2><Link href="/passenger/bookings">View all</Link></div>{error ? <div className="form-message error">{error}</div> : null}{bookings.length ? <div className="passenger-live-list">{bookings.map((booking) => <Link href={`/passenger/ticket?reference=${booking.reference}`} key={booking.id}><span><Mono>{booking.reference}</Mono><small>{new Date(booking.created_at).toLocaleDateString("en-PH", { dateStyle: "medium" })}</small></span><span><Status tone={booking.booking_status === "confirmed" ? "success" : "warning"}>{booking.booking_status}</Status><Mono>₱{Number(booking.total).toLocaleString("en-PH")}</Mono></span></Link>)}</div> : !error ? <div className="real-empty"><h3>No bookings yet</h3><p>Your real VanGO bookings will appear here after you reserve and confirm a trip.</p></div> : null}</section><section className="mock-payment-note"><strong>Mock payment only</strong><p>VanGO never contacts a bank or wallet in this development version. No real money is charged.</p></section></div></PassengerShell>;
+  return (
+    <PassengerShell>
+      <section className="passenger-greeting">
+        <div>
+          <span>Welcome back,</span>
+          <h1>{profile?.full_name || "Passenger"}</h1>
+        </div>
+        <Link className="weather-chip" href="/passenger/alerts">{unread} unread</Link>
+      </section>
+      <div className="passenger-real-actions">
+        <Link className="button button-primary large full" href="/passenger/trips">Search a new trip</Link>
+      </div>
+      <div className="passenger-dashboard-grid">
+        <section className="mobile-section">
+          <div className="section-mini-title">
+            <h2>Recent bookings</h2>
+            <Link href="/passenger/bookings">View all</Link>
+          </div>
+          {error ? <div className="form-message error">{error}</div> : null}
+          {bookings.length ? (
+            <div className="passenger-live-list">
+              {bookings.map((booking) => (
+                <Link href={`/passenger/ticket?reference=${booking.reference}`} key={booking.id}>
+                  <span>
+                    <Mono>{booking.reference}</Mono>
+                    <small>{new Date(booking.created_at).toLocaleDateString("en-PH", { dateStyle: "medium" })}</small>
+                  </span>
+                  <span>
+                    <Status tone={booking.booking_status === "confirmed" ? "success" : "warning"}>{booking.booking_status}</Status>
+                    <Mono>₱{Number(booking.total).toLocaleString("en-PH")}</Mono>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : !error ? (
+            <div className="real-empty">
+              <h3>No bookings yet</h3>
+              <p>Your real VanGO bookings will appear here after you reserve and confirm a trip.</p>
+            </div>
+          ) : null}
+        </section>
+        <section className="mock-payment-note">
+          <strong>Mock payment only</strong>
+          <p>VanGO never contacts a bank or wallet in this development version. No real money is charged.</p>
+        </section>
+      </div>
+    </PassengerShell>
+  );
 }
 
 export function LiveSeatBooking() {
