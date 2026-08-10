@@ -1,0 +1,2 @@
+import { LiveModule } from "../../components/live-console";
+export default function Page() { return <LiveModule consoleType="admin" eyebrow="PASSENGERS / SCOPED DATA" title="Customers" copy="Passenger manifest details visible only through bookings in your scope." table="booking_passengers" orderBy="created_at" watch={["bookings"]} columns={[{key:"full_name",label:"Passenger"},{key:"mobile_e164",label:"Mobile"},{key:"seat_code",label:"Seat",format:"mono"},{key:"eligibility_type",label:"Eligibility"},{key:"created_at",label:"Booked",format:"datetime"}]} />; }

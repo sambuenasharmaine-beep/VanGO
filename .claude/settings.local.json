@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npx tsc --noEmit --pretty false 2>&1)",
+      "PowerShell(npm run lint 2>&1)",
+      "PowerShell(npm test 2>&1)",
+      "PowerShell(Get-ChildItem -Recurse -File \"C:\\\\Users\\\\4tvon\\\\OneDrive\\\\Documents\\\\Sambuena\\\\app\" | Select-Object Length, @{n='Path';e={$_.FullName.Replace\\('C:\\\\Users\\\\4tvon\\\\OneDrive\\\\Documents\\\\Sambuena\\\\',''\\)}} | Sort-Object Path | Format-Table -AutoSize)",
+      "Bash(node -e ' *)",
+      "PowerShell(if \\($?\\) { \"LINT OK\" })",
+      "PowerShell(if \\($?\\) { \"TYPECHECK OK\" })",
+      "PowerShell(Select-String -Path \"C:\\\\Users\\\\4tvon\\\\OneDrive\\\\Documents\\\\Sambuena\\\\dist\\\\client\\\\_next\\\\static\\\\chunks\\\\live-console-CVbx6nIQ.js\" -Pattern \"DEMO DATA\" -SimpleMatch | Select-Object -First 2 | ForEach-Object { $_.Line.Substring\\([Math]::Max\\(0,$_.Line.IndexOf\\(\"DEMO DATA\"\\)-300\\), 700\\) })",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 3010 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { foreach \\($x in $c\\) { $p = Get-CimInstance Win32_Process -Filter \"ProcessId = $\\($x.OwningProcess\\)\" -ErrorAction SilentlyContinue; \"PID $\\($x.OwningProcess\\)\"; \"NAME: $\\($p.Name\\)\"; \"CMD: $\\($p.CommandLine\\)\"; \"CWD-hint: $\\($p.ExecutablePath\\)\" } } else { \"nothing listening on 3010\" })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3010/passenger\" -UseBasicParsing -TimeoutSec 20; \"STATUS: $\\($r.StatusCode\\)\"; \"LENGTH: $\\($r.Content.Length\\)\"; if \\($r.Content -match \"DEMO DATA\"\\) { \"!! DEMO DATA present in served HTML\" } else { \"no 'DEMO DATA' in served HTML\" }; if \\($r.Content -match \"VG-DEMO\"\\) { \"!! VG-DEMO present\" } else { \"no VG-DEMO in served HTML\" } } catch { \"REQUEST FAILED: $\\($_.Exception.Message\\)\" })",
+      "PowerShell($css = \\(Invoke-WebRequest -Uri \"http://localhost:3010/app/globals.css\" -UseBasicParsing -TimeoutSec 20\\).Content; $i = $css.IndexOf\\(\"min-width: 760px\"\\); if \\($i -lt 0\\) { $i = $css.IndexOf\\(\"min-width:760px\"\\) }; $css.Substring\\([Math]::Max\\(0,$i-80\\), 1500\\))",
+      "PowerShell($line = \\(Get-Content \"C:\\\\Users\\\\4tvon\\\\OneDrive\\\\Documents\\\\Sambuena\\\\app\\\\globals.css\"\\)[352]; $line.Substring\\($line.Length-170\\))",
+      "Bash(grep -no \"select[^{,]*{[^}]*}\" globals.css)",
+      "PowerShell($line = \\(Get-Content \"C:\\\\Users\\\\4tvon\\\\OneDrive\\\\Documents\\\\Sambuena\\\\app\\\\globals.css\"\\)[295]; $i = $line.IndexOf\\(\"select { width: 100%\"\\); $line.Substring\\([Math]::Max\\(0,$i-160\\), 320\\))"
+    ]
+  }
+}

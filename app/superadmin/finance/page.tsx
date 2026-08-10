@@ -1,0 +1,2 @@
+import { SettlementConsole } from "../../components/operator-features";
+export default function Page() { return <SettlementConsole />; }
