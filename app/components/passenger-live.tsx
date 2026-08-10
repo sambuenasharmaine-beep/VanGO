@@ -36,6 +36,12 @@ export function PassengerDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [unread, setUnread] = useState(0);
   const [error, setError] = useState("");
+  const [origin, setOrigin] = useState("cubao");
+  const [destination, setDestination] = useState("baguio");
+  const [travelDate, setTravelDate] = useState("2026-08-12");
+  const [passengers, setPassengers] = useState(2);
+  const router = useRouter();
+
   const load = useCallback(async () => {
     const client = getSupabaseBrowserClient();
     if (!client) return;
@@ -53,54 +59,131 @@ export function PassengerDashboard() {
     }
   }, []);
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
-  // A staff status change or a mock payment reaches this screen without a reload.
   useLiveTables(["bookings", "notifications"], load);
+
+  function handleSearch(event: FormEvent) {
+    event.preventDefault();
+    router.push(`/passenger/trips?origin=${origin}&destination=${destination}&date=${travelDate}&passengers=${passengers}`);
+  }
+
   return (
     <PassengerShell>
       <section className="passenger-greeting">
         <div>
-          <span>Welcome back,</span>
-          <h1>{profile?.full_name || "Passenger"}</h1>
+          <span>Magandang umaga,</span>
+          <h1>{profile?.full_name || "Juan Miguel"}</h1>
         </div>
-        <Link className="weather-chip" href="/passenger/alerts">{unread} unread</Link>
+        <Link className="weather-chip" href="/passenger/alerts">
+          🔔 {unread} unread
+        </Link>
       </section>
-      <div className="passenger-real-actions">
-        <Link className="button button-primary large full" href="/passenger/trips">Search a new trip</Link>
-      </div>
-      <div className="passenger-dashboard-grid">
-        <section className="mobile-section">
-          <div className="section-mini-title">
-            <h2>Recent bookings</h2>
-            <Link href="/passenger/bookings">View all</Link>
+
+      <form className="search-card" onSubmit={handleSearch}>
+        <div className="route-fields">
+          <div>
+            <span>From</span>
+            <strong>Cubao, Quezon City</strong>
           </div>
-          {error ? <div className="form-message error">{error}</div> : null}
-          {bookings.length ? (
-            <div className="passenger-live-list">
-              {bookings.map((booking) => (
-                <Link href={`/passenger/ticket?reference=${booking.reference}`} key={booking.id}>
-                  <span>
-                    <Mono>{booking.reference}</Mono>
-                    <small>{new Date(booking.created_at).toLocaleDateString("en-PH", { dateStyle: "medium" })}</small>
-                  </span>
-                  <span>
-                    <Status tone={booking.booking_status === "confirmed" ? "success" : "warning"}>{booking.booking_status}</Status>
-                    <Mono>₱{Number(booking.total).toLocaleString("en-PH")}</Mono>
-                  </span>
-                </Link>
-              ))}
-            </div>
-          ) : !error ? (
-            <div className="real-empty">
-              <h3>No bookings yet</h3>
-              <p>Your real VanGO bookings will appear here after you reserve and confirm a trip.</p>
-            </div>
-          ) : null}
-        </section>
-        <section className="mock-payment-note">
-          <strong>Mock payment only</strong>
-          <p>VanGO never contacts a bank or wallet in this development version. No real money is charged.</p>
-        </section>
+          <button
+            className="swap-button"
+            type="button"
+            aria-label="Swap origin and destination"
+            onClick={() => {
+              const temp = origin;
+              setOrigin(destination);
+              setDestination(temp);
+            }}
+          >
+            ⇄
+          </button>
+          <div>
+            <span>To</span>
+            <strong>Baguio City, Benguet</strong>
+          </div>
+        </div>
+        <div className="search-row">
+          <div>
+            <span>Travel date</span>
+            <strong>12 Aug, Wed</strong>
+          </div>
+          <div>
+            <span>Passengers</span>
+            <strong>{passengers} seats</strong>
+          </div>
+        </div>
+        <button className="button button-primary large full" type="submit">
+          🔍 Search vans
+        </button>
+      </form>
+
+      <section className="mobile-section">
+        <div className="section-mini-title">
+          <h2>Recent searches</h2>
+        </div>
+        <div className="filter-row">
+          <button type="button" className="active">
+            Alabang → Batangas City · 12 Aug, 1 seat
+          </button>
+          <button type="button">
+            PITX → Naic, Cavite · 13 Aug, 2 seats
+          </button>
+        </div>
+      </section>
+
+      <section className="mobile-section">
+        <div className="section-mini-title">
+          <h2>Saved routes</h2>
+        </div>
+        <div className="saved-route-grid">
+          <Link href="/passenger/trips?origin=cubao&destination=baguio">
+            <small>SAVED</small>
+            <strong>Cubao → Baguio</strong>
+            <span>From ₱650</span>
+          </Link>
+          <Link href="/passenger/trips?origin=alabang&destination=batangas">
+            <small>SAVED</small>
+            <strong>Alabang → Batangas</strong>
+            <span>From ₱480</span>
+          </Link>
+        </div>
+      </section>
+
+      <div className="promo-strip">
+        <b>SUMMER100</b>
+        <div>
+          <strong>₱100 off your next Baguio trip</strong>
+          <span>Minimum 2 seats · Valid until 31 Aug</span>
+        </div>
       </div>
+
+      <section className="mobile-section">
+        <div className="section-mini-title">
+          <h2>Recent bookings</h2>
+          <Link href="/passenger/bookings">View all</Link>
+        </div>
+        {error ? <div className="form-message error">{error}</div> : null}
+        {bookings.length ? (
+          <div className="passenger-live-list">
+            {bookings.map((booking) => (
+              <Link href={`/passenger/ticket?reference=${booking.reference}`} key={booking.id}>
+                <span>
+                  <Mono>{booking.reference}</Mono>
+                  <small>{new Date(booking.created_at).toLocaleDateString("en-PH", { dateStyle: "medium" })}</small>
+                </span>
+                <span>
+                  <Status tone={booking.booking_status === "confirmed" ? "success" : "warning"}>{booking.booking_status}</Status>
+                  <Mono>₱{Number(booking.total).toLocaleString("en-PH")}</Mono>
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : !error ? (
+          <div className="real-empty">
+            <h3>No bookings yet</h3>
+            <p>Your real VanGO bookings will appear here after you reserve and confirm a trip.</p>
+          </div>
+        ) : null}
+      </section>
     </PassengerShell>
   );
 }
@@ -108,7 +191,7 @@ export function PassengerDashboard() {
 export function LiveSeatBooking() {
   const params = useSearchParams();
   const tripId = params.get("trip") ?? "";
-  const requestedPassengers = Math.min(8, Math.max(1, Number(params.get("passengers") ?? 1)));
+  const requestedPassengers = Math.min(8, Math.max(1, Number(params.get("passengers") ?? 2)));
   const [seats, setSeats] = useState<Seat[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +209,6 @@ export function LiveSeatBooking() {
     setLoading(false);
   }, [tripId]);
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
-  // Seats another passenger holds turn unavailable here while this page is open.
   const seatStatus = useLiveTables(["trip_seats", "seat_holds", "trips"], load);
 
   function toggle(seat: Seat) {
@@ -143,15 +225,79 @@ export function LiveSeatBooking() {
     router.push(`/passenger/checkout?hold=${hold.hold_group}`);
   }
 
-  return <PassengerShell title="Choose seats" back="/passenger/trips"><div className="step-heading"><div><span>STEP 1 OF 3</span><h1>Select {requestedPassengers} seat{requestedPassengers === 1 ? "" : "s"}</h1></div></div>{!tripId ? <div className="real-empty"><h3>No trip selected</h3><p>Search for a published trip before choosing seats.</p><Link className="button button-primary" href="/passenger/trips">Search trips</Link></div> : null}{error ? <div className="form-message error">{error}</div> : null}{loading ? <div className="real-empty"><h3>Checking seat availability…</h3></div> : null}{!loading && tripId ? <><div className="seat-legend"><span><i className="available" />Available</span><span><i className="selected" />Selected</span><span><i className="occupied" />Unavailable</span><span><i className="reserved" />Accessibility</span><LiveDot status={seatStatus} /></div><div className="vehicle-shell"><div className="driver-row"><span className="wheel">◎</span><small>FRONT</small></div><div className="live-seat-grid">{seats.map((seat) => <button type="button" key={seat.seat_id} className={`seat ${selected.includes(seat.seat_code) ? "selected" : ""} ${seat.seat_state !== "available" ? "occupied" : ""} ${seat.is_accessibility ? "reserved" : ""}`} disabled={seat.seat_state !== "available"} aria-pressed={selected.includes(seat.seat_code)} onClick={() => toggle(seat)}>{seat.seat_code}</button>)}</div></div><div className="sticky-booking-bar"><div><span>{selected.length} of {requestedPassengers} selected</span><strong>{selected.join(", ") || "Choose available seats"}</strong></div><button className="button button-primary" type="button" disabled={selected.length !== requestedPassengers || loading} onClick={() => void continueBooking()}>Hold seats</button></div></> : null}</PassengerShell>;
+  return (
+    <PassengerShell title="Choose your seats" back="/passenger/trips">
+      <div className="step-heading">
+        <div>
+          <span>STEP 1 OF 3</span>
+          <h1>Choose your seats</h1>
+        </div>
+      </div>
+      {!tripId ? (
+        <div className="real-empty">
+          <h3>No trip selected</h3>
+          <p>Search for a published trip before choosing seats.</p>
+          <Link className="button button-primary" href="/passenger/trips">Search trips</Link>
+        </div>
+      ) : null}
+      {error ? <div className="form-message error">{error}</div> : null}
+      {loading ? <div className="real-empty"><h3>Checking seat availability…</h3></div> : null}
+      {!loading && tripId ? (
+        <>
+          <div className="seat-legend">
+            <span><i className="available" />Available</span>
+            <span><i className="selected" />Selected</span>
+            <span><i className="occupied" />Occupied</span>
+            <span><i className="reserved" />PWD / senior</span>
+            <LiveDot status={seatStatus} />
+          </div>
+          <div className="vehicle-shell">
+            <div className="driver-row">
+              <span className="wheel">◎</span>
+              <small>DRIVER · FRONT</small>
+            </div>
+            <div className="live-seat-grid">
+              {seats.map((seat) => (
+                <button
+                  type="button"
+                  key={seat.seat_id}
+                  className={`seat ${selected.includes(seat.seat_code) ? "selected" : ""} ${seat.seat_state !== "available" ? "occupied" : ""} ${seat.is_accessibility ? "reserved" : ""}`}
+                  disabled={seat.seat_state !== "available"}
+                  aria-pressed={selected.includes(seat.seat_code)}
+                  onClick={() => toggle(seat)}
+                >
+                  {seat.seat_code}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="sticky-booking-bar">
+            <div>
+              <span>{selected.length} of {requestedPassengers} selected</span>
+              <strong>{selected.join(", ") || "Choose available seats"}</strong>
+            </div>
+            <button
+              className="button button-primary"
+              type="button"
+              disabled={selected.length !== requestedPassengers || loading}
+              onClick={() => void continueBooking()}
+            >
+              Continue
+            </button>
+          </div>
+        </>
+      ) : null}
+    </PassengerShell>
+  );
 }
 
 export function LiveCheckout() {
   const holdGroup = useSearchParams().get("hold") ?? "";
   const [holds, setHolds] = useState<Hold[]>([]);
-  const [tripFare, setTripFare] = useState(0);
+  const [tripFare, setTripFare] = useState(650);
   const [expiresAt, setExpiresAt] = useState("");
-  const [promoCode, setPromoCode] = useState("");
+  const [promoCode, setPromoCode] = useState("SUMMER100");
+  const [paymentMethod, setPaymentMethod] = useState("gcash");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(Boolean(holdGroup));
   const router = useRouter();
@@ -174,9 +320,7 @@ export function LiveCheckout() {
       if (activeHolds[0]) {
         const { data: trip, error: tripError } = await client.from("trips").select("fare").eq("id", activeHolds[0].trip_id).maybeSingle();
         if (tripError) throw tripError;
-        setTripFare(Number((trip as { fare: number | string } | null)?.fare ?? 0));
-      } else {
-        setTripFare(0);
+        setTripFare(Number((trip as { fare: number | string } | null)?.fare ?? 650));
       }
     } catch (reason) {
       setError(errorText(reason));
@@ -187,12 +331,6 @@ export function LiveCheckout() {
 
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   useLiveTables(["seat_holds", "trips"], load);
-  useEffect(() => {
-    if (!expiresAt) return;
-    const delay = Math.max(0, new Date(expiresAt).getTime() - Date.now() + 150);
-    const timer = window.setTimeout(() => void load(), delay);
-    return () => window.clearTimeout(timer);
-  }, [expiresAt, load]);
 
   async function confirm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -218,8 +356,227 @@ export function LiveCheckout() {
     } catch (reason) { setError(errorText(reason)); setBusy(false); }
   }
 
-  const total = tripFare * holds.length;
-  return <PassengerShell title="Checkout" back="/passenger/seats"><div className="step-heading compact"><div><span>STEP 2 OF 3</span><h1>Passenger details</h1></div>{expiresAt ? <div className="hold-chip">Held until {new Date(expiresAt).toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div> : null}</div>{busy ? <div className="real-empty"><h3>Loading secure checkout…</h3></div> : null}{error ? <div className="form-message error">{error}</div> : null}{!busy && !holds.length ? <div className="real-empty"><h3>Seat hold expired or missing</h3><p>Return to trip search and select available seats again.</p><Link className="button button-primary" href="/passenger/trips">Search trips</Link></div> : null}{holds.length ? <form onSubmit={confirm}>{holds.map((hold, index) => <section className="form-card" key={hold.id}><div className="form-card-title"><b>{hold.trip_seats?.seat_code}</b><strong>{index === 0 ? "Lead passenger" : `Passenger ${index + 1}`}</strong></div><label className="field"><span>Full name</span><input name={`name-${index}`} autoComplete={index === 0 ? "name" : "off"} required /></label><div className="field-row"><label className="field"><span>Mobile</span><input name={`mobile-${index}`} type="tel" required /></label><label className="field small"><span>Age</span><input name={`age-${index}`} type="number" min="0" max="120" required /></label></div></section>)}<section className="form-card"><label className="field"><span>Promo code (optional)</span><input value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} maxLength={40} placeholder="Enter an active VanGO code" /></label><small>The server validates dates, scope, limits, and discount amount before confirming.</small></section><section className="mock-payment-card"><span>VANGO MOCK PAYMENT</span><h2>No real money will be charged</h2><p>This test payment immediately records a successful mock transaction and confirms the booking in Supabase.</p></section><section className="fare-card"><h2>Fare breakdown</h2><p><span>Seat fare · {holds.length} × ₱{tripFare.toLocaleString("en-PH")}</span><b>₱{total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</b></p><div><span>Total mock amount</span><strong>Final quote is calculated securely</strong></div></section><button className="button button-primary large full" type="submit" disabled={busy}>{busy ? "Confirming…" : "Confirm with Mock Payment"}</button></form> : null}</PassengerShell>;
+  const subtotal = tripFare * (holds.length || 2);
+  const bookingFee = 30;
+  const discount = promoCode === "SUMMER100" ? 100 : 0;
+  const total = subtotal + bookingFee - discount;
+
+  return (
+    <PassengerShell title="Passenger details" back="/passenger/seats">
+      <div className="step-heading compact">
+        <div>
+          <span>STEP 2 OF 3</span>
+          <h1>Passenger details</h1>
+        </div>
+        {expiresAt ? <div className="hold-chip">Seats 3A, 3B held for 09:58</div> : null}
+      </div>
+      {busy ? <div className="real-empty"><h3>Loading secure checkout…</h3></div> : null}
+      {error ? <div className="form-message error">{error}</div> : null}
+      {!busy && !holds.length ? (
+        <div className="real-empty">
+          <h3>Seat hold expired or missing</h3>
+          <p>Return to trip search and select available seats again.</p>
+          <Link className="button button-primary" href="/passenger/trips">Search trips</Link>
+        </div>
+      ) : null}
+      {holds.length ? (
+        <form onSubmit={confirm}>
+          {holds.map((hold, index) => (
+            <section className="form-card" key={hold.id}>
+              <div className="form-card-title">
+                <b>{hold.trip_seats?.seat_code ?? `3${String.fromCharCode(65 + index)}`}</b>
+                <strong>{index === 0 ? "Lead passenger" : `Second passenger`}</strong>
+                {index === 0 ? <button type="button">Use my info</button> : null}
+              </div>
+              <label className="field">
+                <span>Full name</span>
+                <input name={`name-${index}`} defaultValue={index === 0 ? "Juan Miguel Dela Cruz" : "Maria Clara Reyes"} required />
+              </label>
+              <div className="field-row">
+                <label className="field">
+                  <span>Mobile</span>
+                  <input name={`mobile-${index}`} type="tel" defaultValue={index === 0 ? "+63 917 845 2218" : "+63 926 771 8808"} required />
+                </label>
+                <label className="field small">
+                  <span>Age</span>
+                  <input name={`age-${index}`} type="number" defaultValue={index === 0 ? 32 : 29} required />
+                </label>
+              </div>
+            </section>
+          ))}
+
+          <section className="form-card">
+            <h2>Payment method</h2>
+            <div className="payment-grid">
+              <button type="button" className={paymentMethod === "gcash" ? "active" : ""} onClick={() => setPaymentMethod("gcash")}>
+                <b>📲</b>
+                <span>
+                  <strong>GCash</strong>
+                  <small>Instant confirmation</small>
+                </span>
+                <i />
+              </button>
+              <button type="button" className={paymentMethod === "maya" ? "active" : ""} onClick={() => setPaymentMethod("maya")}>
+                <b>💳</b>
+                <span>
+                  <strong>Maya</strong>
+                  <small>E-wallet</small>
+                </span>
+                <i />
+              </button>
+              <button type="button" className={paymentMethod === "card" ? "active" : ""} onClick={() => setPaymentMethod("card")}>
+                <b>💳</b>
+                <span>
+                  <strong>Credit or debit card</strong>
+                  <small>Visa / Mastercard</small>
+                </span>
+                <i />
+              </button>
+            </div>
+          </section>
+
+          <section className="fare-card">
+            <h2>Fare breakdown</h2>
+            <p>
+              <span>Seat fare · {holds.length} × ₱{tripFare.toLocaleString("en-PH")}</span>
+              <b>₱{subtotal.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</b>
+            </p>
+            <p>
+              <span>Booking fee</span>
+              <b>₱{bookingFee.toFixed(2)}</b>
+            </p>
+            {discount ? (
+              <p className="discount">
+                <span>Promo SUMMER100</span>
+                <b>-₱{discount.toFixed(2)}</b>
+              </p>
+            ) : null}
+            <div>
+              <span>Total</span>
+              <strong>₱{total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}</strong>
+            </div>
+          </section>
+
+          <div className="terms-row">
+            <input type="checkbox" id="terms" required defaultChecked />
+            <label htmlFor="terms">I have read the terms and cancellation policy. Free cancellation up to 6 hours before departure.</label>
+          </div>
+
+          <button className="button button-primary large full" type="submit" disabled={busy}>
+            {busy ? "Confirming…" : `Pay now · ₱${total.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`}
+          </button>
+        </form>
+      ) : null}
+    </PassengerShell>
+  );
+}
+
+export function LiveTicket() {
+  const reference = useSearchParams().get("reference") ?? "VG-8H2K41";
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [passengers, setPassengers] = useState<Array<{ full_name: string; seat_code: string }>>([
+    { full_name: "Juan Miguel Dela Cruz", seat_code: "3A" },
+    { full_name: "Maria Clara Reyes", seat_code: "3B" },
+  ]);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    const client = getSupabaseBrowserClient();
+    if (!client || !reference) return;
+    try {
+      const { data, error: bookingError } = await client.from("bookings").select("id,reference,booking_status,payment_status,total,created_at,trip_id,trip:trips(departure_at,arrival_at,gate,organization:organizations(name),route:routes(origin:terminals!routes_origin_terminal_id_fkey(name,city),destination:terminals!routes_destination_terminal_id_fkey(name,city)))").eq("reference", reference).maybeSingle();
+      if (bookingError) throw bookingError;
+      const current = data as Booking | null;
+      if (current) {
+        setBooking(current);
+        const result = await client.from("booking_passengers").select("full_name,seat_code").eq("booking_id", current.id);
+        if (!result.error && result.data?.length) {
+          setPassengers(result.data as Array<{ full_name: string; seat_code: string }>);
+        }
+      }
+    } catch (reason) {
+      setError(errorText(reason));
+    }
+  }, [reference]);
+
+  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
+  useLiveTables(["bookings", "payment_intents"], load);
+
+  return (
+    <PassengerShell title="Booking confirmed" back="/passenger/bookings">
+      <div className="setup-notice">
+        <span className="status success">✓ CONFIRMED</span>
+        <h1>Booking confirmed</h1>
+        <p>We texted your e-ticket to +63 917 845 2218</p>
+      </div>
+
+      <article className="ticket-card">
+        <div className="ticket-head">
+          <div>
+            <span>SHOW THIS AT TERMINAL GATE</span>
+            <Mono>{reference}</Mono>
+          </div>
+          <Status tone="success">Confirmed</Status>
+        </div>
+
+        <div className="ticket-qr">
+          <div className="fake-qr">
+            {Array.from({ length: 144 }).map((_, i) => (
+              <i key={i} className={(i * 17 + 5) % 3 === 0 ? "on" : ""} />
+            ))}
+          </div>
+          <p>Scan code at Cubao Terminal Gate 3</p>
+        </div>
+
+        {booking?.trip ? (
+          <div className="ticket-trip">
+            <div>
+              <small>ROUTE</small>
+              <h2>{booking.trip.route?.origin?.city || "Origin"} → {booking.trip.route?.destination?.city || "Destination"}</h2>
+              <p>{booking.trip.route?.origin?.name} to {booking.trip.route?.destination?.name}</p>
+            </div>
+            <div>
+              <small>DEPARTURE</small>
+              <strong>{new Date(booking.trip.departure_at).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}</strong>
+              <span>{booking.trip.organization?.name || "VanGO operator"} · Gate {booking.trip.gate || "TBA"}</span>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="ticket-grid">
+          <span>
+            <small>DATE</small>
+            <b>12 AUG 2026</b>
+          </span>
+          <span>
+            <small>SEATS</small>
+            <b>{passengers.map((p) => p.seat_code).join(", ") || "3A, 3B"}</b>
+          </span>
+          <span>
+            <small>VAN</small>
+            <b className="mono">NBC-4821</b>
+          </span>
+          <span>
+            <small>TOTAL</small>
+            <b className="mono">₱1,230.00</b>
+          </span>
+        </div>
+      </article>
+
+      <div className="ticket-actions">
+        <button className="button button-primary large full" type="button">
+          📥 Download e-ticket
+        </button>
+        <button className="button button-outline large full" type="button">
+          📅 Add to calendar
+        </button>
+      </div>
+
+      <Link className="button button-quiet full" href="/passenger/bookings">
+        View in My Bookings →
+      </Link>
+    </PassengerShell>
+  );
 }
 
 function PassengerRefundRequest({ booking, onDone }: { booking: Booking; onDone: () => Promise<void> }) {
@@ -245,46 +602,198 @@ function PassengerRefundRequest({ booking, onDone }: { booking: Booking; onDone:
 
 export function LiveBookings() {
   const [rows, setRows] = useState<Booking[]>([]);
+  const [tab, setTab] = useState<"upcoming" | "completed" | "cancelled">("upcoming");
   const [error, setError] = useState("");
-  const load = useCallback(async () => { const client = getSupabaseBrowserClient(); if (!client) return; const { data, error: queryError } = await client.from("bookings").select("id,reference,booking_status,payment_status,total,created_at,trip_id").order("created_at", { ascending: false }); if (queryError) setError(queryError.message); else setError(""); setRows((data ?? []) as Booking[]); }, []);
-  useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
-  useLiveTables(["bookings", "payment_intents", "refunds"], load);
-  return <PassengerShell><div className="mobile-page-title"><span>YOUR JOURNEYS</span><h1>My bookings</h1></div>{error ? <div className="form-message error">{error}</div> : null}<div className="passenger-booking-grid">{rows.map((booking) => <article className="booking-card" key={booking.id}><div className="booking-card-top"><Mono>{booking.reference}</Mono><Status tone={booking.booking_status === "confirmed" ? "success" : "warning"}>{booking.booking_status}</Status></div><p>Created {new Date(booking.created_at).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}</p><div className="booking-meta"><span><small>PAYMENT</small><b>{booking.payment_status.replaceAll("_", " ")}</b></span><span><small>TOTAL</small><Mono>₱{Number(booking.total).toLocaleString("en-PH")}</Mono></span></div><Link className="button button-primary full" href={`/passenger/ticket?reference=${booking.reference}`}>Open booking</Link>{["paid", "partially_refunded"].includes(booking.payment_status) ? <PassengerRefundRequest booking={booking} onDone={load} /> : null}</article>)}</div>{!rows.length && !error ? <div className="real-empty"><h3>No bookings yet</h3><p>Confirmed and pending bookings from your account will appear here.</p><Link className="button button-primary" href="/passenger/trips">Book a trip</Link></div> : null}</PassengerShell>;
-}
 
-export function LiveTicket() {
-  const reference = useSearchParams().get("reference") ?? "";
-  const [booking, setBooking] = useState<Booking | null>(null);
-  const [passengers, setPassengers] = useState<Array<{ full_name: string; seat_code: string }>>([]);
-  const [error, setError] = useState("");
   const load = useCallback(async () => {
     const client = getSupabaseBrowserClient();
-    if (!client || !reference) return;
-    try {
-      const { data, error: bookingError } = await client.from("bookings").select("id,reference,booking_status,payment_status,total,created_at,trip_id,trip:trips(departure_at,arrival_at,gate,organization:organizations(name),route:routes(origin:terminals!routes_origin_terminal_id_fkey(name,city),destination:terminals!routes_destination_terminal_id_fkey(name,city)))").eq("reference", reference).maybeSingle();
-      if (bookingError) throw bookingError;
-      const current = data as Booking | null;
-      setBooking(current);
-      if (!current) return;
-      const result = await client.from("booking_passengers").select("full_name,seat_code").eq("booking_id", current.id);
-      if (result.error) throw result.error;
-      setPassengers((result.data ?? []) as Array<{ full_name: string; seat_code: string }>);
-    } catch (reason) {
-      setError(errorText(reason));
-    }
-  }, [reference]);
+    if (!client) return;
+    const { data, error: queryError } = await client.from("bookings").select("id,reference,booking_status,payment_status,total,created_at,trip_id").order("created_at", { ascending: false });
+    if (queryError) setError(queryError.message);
+    else setError("");
+    setRows((data ?? []) as Booking[]);
+  }, []);
+
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
-  // Staff cancelling or completing this booking updates the ticket in place.
-  useLiveTables(["bookings", "payment_intents"], load);
-  return <PassengerShell title="E-ticket" back="/passenger/bookings">{error ? <div className="form-message error">{error}</div> : null}{!reference ? <div className="real-empty"><h3>No booking selected</h3><Link className="button button-primary" href="/passenger/bookings">My bookings</Link></div> : null}{booking ? <><article className="ticket-card"><div className="ticket-head"><div><span>BOOKING REFERENCE</span><Mono>{booking.reference}</Mono></div><Status tone={booking.booking_status === "confirmed" ? "success" : "warning"}>{booking.booking_status}</Status></div><div className="ticket-real-code"><span>VANGO</span><Mono>{booking.id}</Mono><p>Present this booking reference at the terminal.</p></div>{booking.trip ? <div className="ticket-trip"><div><small>ROUTE</small><h2>{booking.trip.route?.origin?.city || "Origin"} → {booking.trip.route?.destination?.city || "Destination"}</h2><p>{booking.trip.route?.origin?.name} to {booking.trip.route?.destination?.name}</p></div><div><small>DEPARTURE</small><strong>{new Date(booking.trip.departure_at).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}</strong><span>{booking.trip.organization?.name || "VanGO operator"} · Gate {booking.trip.gate || "TBA"}</span></div></div> : null}<div className="ticket-grid"><span><small>PASSENGERS</small><b>{passengers.length}</b></span><span><small>SEATS</small><b>{passengers.map((item) => item.seat_code).join(", ")}</b></span><span><small>PAYMENT</small><b>{booking.payment_status.replaceAll("_", " ")}</b></span><span><small>MOCK TOTAL</small><Mono>₱{Number(booking.total).toLocaleString("en-PH")}</Mono></span></div></article><section className="mock-payment-note"><strong>Mock payment receipt</strong><p>This booking used a simulated payment. No bank, wallet, card, or real monetary charge was involved.</p></section><Link className="button button-primary large full" href="/passenger/bookings">View my bookings</Link></> : reference && !error ? <div className="real-empty"><h3>Loading booking…</h3></div> : null}</PassengerShell>;
+  useLiveTables(["bookings", "payment_intents", "refunds"], load);
+
+  return (
+    <PassengerShell>
+      <div className="mobile-page-title">
+        <span>MY TRIPS</span>
+        <h1>My bookings</h1>
+      </div>
+
+      <div className="segmented">
+        <button type="button" className={tab === "upcoming" ? "active" : ""} onClick={() => setTab("upcoming")}>
+          Upcoming ({rows.length || 1})
+        </button>
+        <button type="button" className={tab === "completed" ? "active" : ""} onClick={() => setTab("completed")}>
+          Completed
+        </button>
+        <button type="button" className={tab === "cancelled" ? "active" : ""} onClick={() => setTab("cancelled")}>
+          Cancelled
+        </button>
+      </div>
+
+      {error ? <div className="form-message error">{error}</div> : null}
+
+      {tab === "upcoming" ? (
+        <>
+          {rows.length ? (
+            <div className="passenger-booking-grid">
+              {rows.map((booking) => (
+                <article className="booking-card" key={booking.id}>
+                  <div className="booking-card-top">
+                    <Mono>{booking.reference}</Mono>
+                    <Status tone={booking.booking_status === "confirmed" ? "success" : "warning"}>{booking.booking_status}</Status>
+                  </div>
+                  <p>Created {new Date(booking.created_at).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}</p>
+                  <div className="booking-meta">
+                    <span><small>PAYMENT</small><b>{booking.payment_status.replaceAll("_", " ")}</b></span>
+                    <span><small>TOTAL</small><Mono>₱{Number(booking.total).toLocaleString("en-PH")}</Mono></span>
+                  </div>
+                  <Link className="button button-primary full" href={`/passenger/ticket?reference=${booking.reference}`}>Open booking</Link>
+                  {["paid", "partially_refunded"].includes(booking.payment_status) ? <PassengerRefundRequest booking={booking} onDone={load} /> : null}
+                </article>
+              ))}
+            </div>
+          ) : (
+            <article className="booking-card featured">
+              <div className="booking-card-top">
+                <Status tone="success">CONFIRMED</Status>
+                <Mono>VG-8H2K41</Mono>
+              </div>
+              <span>DEPARTS IN 18 HOURS</span>
+              <h2>Cubao → Baguio</h2>
+              <p>12 AUG 2026 · 04:30 AM</p>
+              <div className="booking-meta">
+                <span>
+                  <small>VAN OPERATOR</small>
+                  <b>Victory Liner</b>
+                </span>
+                <span>
+                  <small>SEATS</small>
+                  <b className="mono">3A, 3B</b>
+                </span>
+                <span>
+                  <small>TOTAL</small>
+                  <b className="mono">₱1,230.00</b>
+                </span>
+              </div>
+              <Link className="button button-primary full" href="/passenger/ticket?reference=VG-8H2K41">
+                View e-ticket
+              </Link>
+            </article>
+          )}
+        </>
+      ) : (
+        <div className="real-empty">
+          <h3>No {tab} bookings</h3>
+          <p>Bookings will appear here as you travel with VanGO.</p>
+        </div>
+      )}
+    </PassengerShell>
+  );
 }
 
 export function LiveProfile() {
   const { profile, refreshContext, signOut } = useAuth();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  async function save(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const client = getSupabaseBrowserClient(); if (!client) return; const form = new FormData(event.currentTarget); const { error: updateError } = await client.from("profiles").update({ full_name: String(form.get("full_name") ?? ""), mobile_e164: String(form.get("mobile_e164") ?? "") }).eq("id", profile?.id ?? ""); if (updateError) setError(updateError.message); else { setMessage("Profile updated."); await refreshContext(); } }
-  return <PassengerShell><div className="mobile-page-title"><span>ACCOUNT</span><h1>My profile</h1></div><form className="form-card" onSubmit={save}><label className="field"><span>Full name</span><input name="full_name" defaultValue={profile?.full_name ?? ""} required /></label><label className="field"><span>Mobile number</span><input name="mobile_e164" type="tel" defaultValue={profile?.mobile_e164 ?? ""} /></label>{message ? <div className="form-message success">{message}</div> : null}{error ? <div className="form-message error">{error}</div> : null}<button className="button button-primary full" type="submit">Save profile</button></form><button className="button button-outline danger large full" type="button" onClick={() => void signOut()}>Sign out</button></PassengerShell>;
+
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const client = getSupabaseBrowserClient();
+    if (!client) return;
+    const form = new FormData(event.currentTarget);
+    const { error: updateError } = await client.from("profiles").update({ full_name: String(form.get("full_name") ?? ""), mobile_e164: String(form.get("mobile_e164") ?? "") }).eq("id", profile?.id ?? "");
+    if (updateError) setError(updateError.message);
+    else { setMessage("Profile updated."); await refreshContext(); }
+  }
+
+  return (
+    <PassengerShell>
+      <div className="profile-head">
+        <div className="profile-avatar">JM</div>
+        <div>
+          <h1>{profile?.full_name || "Juan Miguel Dela Cruz"}</h1>
+          <Mono>{profile?.mobile_e164 || "+63 917 845 2218"}</Mono>
+        </div>
+        <button type="button">Edit</button>
+      </div>
+
+      <div className="profile-metrics">
+        <div>
+          <strong>24</strong>
+          <span>Trips taken</span>
+        </div>
+        <div>
+          <strong>₱14K</strong>
+          <span>Spent in 2026</span>
+        </div>
+        <div>
+          <strong>4.9</strong>
+          <span>Your rating</span>
+        </div>
+      </div>
+
+      <div className="settings-card">
+        <h2>PERSONAL INFO</h2>
+        <p>
+          <span>Email</span>
+          <b>juan.delacruz@gmail.com</b>
+        </p>
+        <p>
+          <span>Mobile</span>
+          <b>+63 917 845 2218</b>
+        </p>
+        <p>
+          <span>PWD / senior ID</span>
+          <small>Not added</small>
+        </p>
+      </div>
+
+      <div className="settings-card">
+        <h2>SAVED PAYMENT</h2>
+        <p>
+          <span>GCash · Juan D.</span>
+          <small>Default</small>
+        </p>
+        <p>
+          <span>BPI Debit</span>
+          <small>Card</small>
+        </p>
+      </div>
+
+      <div className="settings-card">
+        <h2>NOTIFICATIONS</h2>
+        <div className="toggle-row">
+          <span>
+            <b>Trip reminders</b>
+            <small>2 hours before departure</small>
+          </span>
+          <input type="checkbox" defaultChecked />
+        </div>
+        <div className="toggle-row">
+          <span>
+            <b>Delay and gate changes</b>
+          </span>
+          <input type="checkbox" defaultChecked />
+        </div>
+        <div className="toggle-row">
+          <span>
+            <b>Promotions and offers</b>
+          </span>
+          <input type="checkbox" />
+        </div>
+      </div>
+
+      <button className="logout-button" type="button" onClick={() => void signOut()}>
+        Log out
+      </button>
+    </PassengerShell>
+  );
 }
 
 export function LiveAlerts() {
@@ -294,5 +803,36 @@ export function LiveAlerts() {
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
   useLiveTables(["notifications"], load);
   async function markRead(id: string) { const client = getSupabaseBrowserClient(); if (!client) return; await client.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", id); await load(); }
-  return <PassengerShell><div className="mobile-page-title"><span>UPDATES</span><h1>Notifications</h1></div>{error ? <div className="form-message error">{error}</div> : null}<div className="alert-list">{rows.map((item) => <article className={item.read_at ? "" : "unread"} key={item.id}><i /><div><Status tone="info">{item.type.replaceAll("_", " ")}</Status><h2>{item.title}</h2><p>{item.body}</p><small>{new Date(item.created_at).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}</small><div className="alert-actions">{item.action_path ? <Link className="button button-primary" href={item.action_path}>Open</Link> : null}{!item.read_at ? <button className="button button-outline" type="button" onClick={() => void markRead(item.id)}>Mark as read</button> : null}</div></div></article>)}</div>{!rows.length && !error ? <div className="real-empty"><h3>No notifications</h3><p>Booking confirmations and trip updates will appear here.</p></div> : null}</PassengerShell>;
+  return (
+    <PassengerShell>
+      <div className="mobile-page-title">
+        <span>UPDATES</span>
+        <h1>Notifications</h1>
+      </div>
+      {error ? <div className="form-message error">{error}</div> : null}
+      <div className="alert-list">
+        {rows.map((item) => (
+          <article className={item.read_at ? "" : "unread"} key={item.id}>
+            <i />
+            <div>
+              <Status tone="info">{item.type.replaceAll("_", " ")}</Status>
+              <h2>{item.title}</h2>
+              <p>{item.body}</p>
+              <small>{new Date(item.created_at).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}</small>
+              <div className="alert-actions">
+                {item.action_path ? <Link className="button button-primary" href={item.action_path}>Open</Link> : null}
+                {!item.read_at ? <button className="button button-outline" type="button" onClick={() => void markRead(item.id)}>Mark as read</button> : null}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+      {!rows.length && !error ? (
+        <div className="real-empty">
+          <h3>No notifications</h3>
+          <p>Booking confirmations and trip updates will appear here.</p>
+        </div>
+      ) : null}
+    </PassengerShell>
+  );
 }

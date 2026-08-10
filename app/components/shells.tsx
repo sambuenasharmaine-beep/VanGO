@@ -11,9 +11,9 @@ import { Brand, LiveDot } from "./ui";
 const passengerNav = [
   ["Home", "/passenger", "⌂"],
   ["Bookings", "/passenger/bookings", "▤"],
-  ["Alerts", "/passenger/alerts", "•"],
+  ["Alerts", "/passenger/alerts", "🔔"],
   ["Support", "/passenger/support", "?"],
-  ["Profile", "/passenger/profile", "○"],
+  ["Profile", "/passenger/profile", "👤"],
 ];
 
 export function PassengerShell({ children, title, back }: { children: ReactNode; title?: string; back?: string }) {

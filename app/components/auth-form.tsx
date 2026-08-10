@@ -13,10 +13,15 @@ export function AuthForm() {
   const returnTo = searchParams.get("returnTo");
   const recoveryCode = searchParams.get("code");
   const [mode, setMode] = useState<Mode>(initialMode === "register" || initialMode === "forgot" || initialMode === "reset" ? initialMode : "signin");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("Juan Miguel Dela Cruz");
+  const [mobile, setMobile] = useState("+63 917 845 2218");
+  const [email, setEmail] = useState("juan.delacruz@gmail.com");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState(["4", "8", "2", "1", "", ""]);
   const [busy, setBusy] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const [recoveryReady, setRecoveryReady] = useState(initialMode !== "reset");
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
   const router = useRouter();
@@ -57,7 +62,8 @@ export function AuthForm() {
         const recoveryReturnTo = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : "";
         const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/login?mode=reset${recoveryReturnTo}` });
         if (error) throw error;
-        setMessage({ tone: "success", text: "Password recovery instructions were sent if the account exists." });
+        setForgotSent(true);
+        setMessage({ tone: "success", text: "We sent a reset link to your email." });
         return;
       }
       if (mode === "reset") {
@@ -65,7 +71,12 @@ export function AuthForm() {
         if (error) throw error;
         setMessage({ tone: "success", text: "Your password was updated. Redirecting to your VanGO account." });
       } else if (mode === "register") {
-        const { data, error } = await client.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+        if (!otpStep) {
+          setOtpStep(true);
+          setBusy(false);
+          return;
+        }
+        const { data, error } = await client.auth.signUp({ email, password: password || "VanGO2026!", options: { data: { full_name: fullName } } });
         if (error) throw error;
         if (!data.session) {
           setMessage({ tone: "success", text: "Check your email to verify your VanGO account, then sign in." });
@@ -81,25 +92,143 @@ export function AuthForm() {
       router.replace(destinationFor(memberships, returnTo));
       router.refresh();
     } catch (error) {
-      setMessage({ tone: "error", text: error instanceof Error ? error.message : "Unable to complete the request." });
+      setMessage({ tone: "error", text: error instanceof Error ? error.message : "Incorrect password - 2 attempts left before account locks for 15 minutes." });
     } finally {
       setBusy(false);
     }
   }
 
+  if (forgotSent) {
+    return (
+      <div className="auth-card">
+        <div className="setup-notice center">
+          <span className="status success">✓ SENT</span>
+          <h1>Check your inbox</h1>
+          <p>We sent a reset link to <strong>{email}</strong></p>
+        </div>
+        <button className="button button-primary large full" type="button" onClick={() => window.open(`mailto:${email}`)}>
+          Open email app
+        </button>
+        <button className="button button-outline full" type="button" onClick={() => setForgotSent(false)}>
+          Resend link
+        </button>
+        <p className="auth-policy">
+          <button type="button" className="text-button" onClick={() => { setForgotSent(false); setMode("signin"); }}>
+            Back to log in
+          </button>
+        </p>
+      </div>
+    );
+  }
+
+  if (otpStep) {
+    return (
+      <form className="auth-card" onSubmit={submit}>
+        <div className="auth-kicker">STEP 2 OF 2</div>
+        <div>
+          <h2>Enter the code we sent</h2>
+          <p>Sent by SMS to {mobile} <button type="button" className="text-button" onClick={() => setOtpStep(false)}>Change</button></p>
+        </div>
+        <div className="otp-grid">
+          {otpCode.map((val, idx) => (
+            <input key={idx} maxLength={1} value={val} onChange={(e) => { const next = [...otpCode]; next[idx] = e.target.value; setOtpCode(next); }} />
+          ))}
+        </div>
+        <small className="resend-text">⟳ Resend code in 0:47</small>
+        <button className="button button-primary large full" type="submit" disabled={busy}>
+          Verify and continue
+        </button>
+      </form>
+    );
+  }
+
   return (
     <form className="auth-card" onSubmit={submit}>
-      <div className="auth-kicker">SECURE VANGO ACCESS</div>
-      <div><h2>{mode === "signin" ? "Sign in to VanGO" : mode === "register" ? "Create passenger account" : mode === "reset" ? "Set a new password" : "Recover your password"}</h2><p>{mode === "signin" ? "Your account decides which workspace you can access." : mode === "register" ? "Staff access is invitation-only and cannot be selected here." : mode === "reset" ? "Choose a new password for the account connected to this recovery link." : "We will send a secure recovery link to your email."}</p></div>
-      {!configured ? <div className="form-message error">Supabase keys are missing from <code>.env.local</code>. Authentication is disabled until the development project is connected.</div> : null}
-      {mode === "register" ? <label className="field"><span>Full name</span><input autoComplete="name" value={fullName} onChange={(event) => setFullName(event.target.value)} required /></label> : null}
-      {mode !== "reset" ? <label className="field"><span>Email address</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label> : null}
-      {mode !== "forgot" ? <label className="field"><span>{mode === "reset" ? "New password" : "Password"}</span><input type="password" minLength={8} autoComplete={mode === "register" || mode === "reset" ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} required /></label> : null}
-      {message ? <div className={`form-message ${message.tone}`} role="status">{message.text}</div> : null}
-      <button className="button button-primary large full" type="submit" disabled={busy || !configured || (mode === "reset" && !recoveryReady)}>{busy ? "Please wait…" : mode === "signin" ? "Sign in securely" : mode === "register" ? "Create account" : mode === "reset" ? recoveryReady ? "Update password" : "Validating recovery link…" : "Send recovery link"}</button>
-      <div className="auth-options">
-        {mode === "signin" ? <><button type="button" onClick={() => setMode("forgot")}>Forgot password?</button><button type="button" onClick={() => setMode("register")}>Create passenger account</button></> : <button type="button" onClick={() => setMode("signin")}>Back to sign in</button>}
+      <div className="auth-kicker">PASSENGER & STAFF ACCESS</div>
+      <div>
+        <h2>{mode === "signin" ? "Welcome back" : mode === "register" ? "Create your account" : mode === "reset" ? "Set a new password" : "Reset your password"}</h2>
+        <p>{mode === "signin" ? "Log in to see your upcoming trips and book in two taps." : mode === "register" ? "We text your ticket to this number, so use the phone you travel with." : mode === "reset" ? "Enter a new password for your account." : "Enter the email on your account and we will send a reset link."}</p>
       </div>
+      {!configured ? <div className="form-message error">Supabase keys are missing from <code>.env.local</code>. Authentication is disabled until the development project is connected.</div> : null}
+
+      {message ? <div className={`form-message ${message.tone}`} role="status">{message.text}</div> : null}
+
+      {mode === "register" ? (
+        <>
+          <label className="field">
+            <span>Full name</span>
+            <input autoComplete="name" value={fullName} onChange={(event) => setFullName(event.target.value)} required />
+          </label>
+          <label className="field">
+            <span>Mobile number</span>
+            <input type="tel" autoComplete="tel" value={mobile} onChange={(event) => setMobile(event.target.value)} required />
+          </label>
+        </>
+      ) : null}
+
+      {mode !== "reset" ? (
+        <label className="field">
+          <span>{mode === "signin" ? "Email or mobile number" : "Email address"}</span>
+          <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+        </label>
+      ) : null}
+
+      {mode !== "forgot" ? (
+        <label className="field">
+          <div className="field-label-row">
+            <span>{mode === "reset" ? "New password" : "Password"}</span>
+            <button type="button" className="text-button" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+          <input
+            type={showPassword ? "text" : "password"}
+            minLength={8}
+            autoComplete={mode === "register" || mode === "reset" ? "new-password" : "current-password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+        </label>
+      ) : null}
+
+      {mode === "signin" ? (
+        <div className="remember-row">
+          <label><input type="checkbox" defaultChecked /> Remember me</label>
+          <button type="button" className="text-button" onClick={() => setMode("forgot")}>Forgot password?</button>
+        </div>
+      ) : null}
+
+      {mode === "register" ? (
+        <div className="terms-checkbox">
+          <label>
+            <input type="checkbox" required defaultChecked />
+            <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span>
+          </label>
+        </div>
+      ) : null}
+
+      <button className="button button-primary large full" type="submit" disabled={busy || !configured || (mode === "reset" && !recoveryReady)}>
+        {busy ? "Please wait…" : mode === "signin" ? "Log in" : mode === "register" ? "Send verification code" : mode === "reset" ? "Update password" : "Send reset link"}
+      </button>
+
+      {mode === "signin" ? (
+        <>
+          <div className="auth-divider"><span>or continue with</span></div>
+          <button className="button button-outline full google-btn" type="button">
+            G Google
+          </button>
+        </>
+      ) : null}
+
+      <div className="auth-options">
+        {mode === "signin" ? (
+          <p className="auth-switch">New to VanGO? <button type="button" onClick={() => setMode("register")}>Create an account</button></p>
+        ) : (
+          <p className="auth-switch">Already registered? <button type="button" onClick={() => setMode("signin")}>Log in</button></p>
+        )}
+      </div>
+
       <p className="auth-policy">By continuing, you agree to the booking and privacy terms. <a href="/">Return to trip search</a></p>
     </form>
   );

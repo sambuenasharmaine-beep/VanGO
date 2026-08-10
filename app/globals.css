@@ -454,13 +454,70 @@ input::placeholder { color: var(--soft); }
   .mock-payment-note, .mock-payment-card { max-width: 760px; margin-inline: auto; }
 }
 
-@media (min-width: 701px) {
-  .passenger-content .passenger-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start; margin-top: 24px; }
-  .passenger-content .passenger-dashboard-grid > * { margin-top: 0 !important; }
-  .passenger-real-actions { margin-block: 20px 24px; }
-  .passenger-real-actions .button.full { width: 100%; max-width: 100%; min-width: 0; }
-  .mock-payment-note { height: 100%; box-sizing: border-box; }
-}
+/* PDF Design System Additions */
+.otp-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 18px 0 10px; }
+.otp-grid input { width: 100%; height: 48px; text-align: center; font-size: 18px; font-weight: 700; border: 1px solid var(--border); border-radius: 9px; }
+.resend-text { color: var(--muted); font-size: 11px; text-align: center; display: block; margin-bottom: 18px; }
+.field-label-row { display: flex; justify-content: space-between; align-items: center; }
+.text-button { border: 0; background: transparent; color: var(--teal-600); font-size: 12px; font-weight: 650; cursor: pointer; }
+.remember-row { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 18px; font-size: 12px; }
+.auth-divider { position: relative; text-align: center; margin: 18px 0; font-size: 11px; color: var(--muted); }
+.auth-divider::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border); z-index: 0; }
+.auth-divider span { position: relative; z-index: 1; padding: 0 12px; background: white; }
+.google-btn { margin-bottom: 14px; font-weight: 600; }
+.auth-switch { text-align: center; font-size: 12px; color: var(--muted); margin-top: 14px; }
+.auth-switch button { border: 0; background: transparent; color: var(--amber-600); font-weight: 700; cursor: pointer; }
+
+/* PDF E-Ticket & Payment Grid */
+.ticket-qr { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 20px 0; padding: 18px; background: #f8fafc; border-radius: 12px; border: 1px dashed var(--border); }
+.fake-qr { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; width: 144px; height: 144px; padding: 8px; background: white; border-radius: 8px; border: 1px solid var(--border); }
+.fake-qr i { background: #e2e8f0; border-radius: 1px; }
+.fake-qr i.on { background: #0f172a; }
+.ticket-qr p { color: var(--muted); font-size: 11px; }
+
+.ticket-route { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin: 18px 0; padding: 14px; background: var(--canvas); border-radius: 10px; }
+.ticket-route div { display: flex; flex-direction: column; gap: 2px; }
+.ticket-route div strong { font-size: 13px; }
+.ticket-route div small { color: var(--muted); font-size: 10px; }
+.ticket-route i { width: 24px; height: 2px; background: var(--teal-600); position: relative; }
+.ticket-actions { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 12px; }
+
+/* Payment Methods Grid */
+.payment-grid { display: grid; gap: 10px; margin-top: 10px; }
+.payment-grid button { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: white; text-align: left; cursor: pointer; transition: all .16s ease; }
+.payment-grid button.active { border-color: var(--teal-600); background: var(--teal-50); }
+.payment-grid button b { font-size: 20px; }
+.payment-grid button span { display: flex; flex-direction: column; flex: 1; gap: 2px; }
+.payment-grid button strong { font-size: 13px; }
+.payment-grid button small { color: var(--muted); font-size: 10px; }
+.terms-row { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* Segmented Tabs */
+.segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: #e2e8f0; border-radius: 10px; margin-bottom: 20px; }
+.segmented button { border: 0; padding: 10px 8px; border-radius: 7px; font-size: 12px; font-weight: 650; color: var(--muted); cursor: pointer; background: transparent; transition: all .16s ease; }
+.segmented button.active { background: white; color: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+
+/* Profile PDF Screen */
+.profile-head { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--teal-600); color: white; display: grid; place-items: center; font-size: 20px; font-weight: 700; }
+.profile-head div { display: flex; flex-direction: column; flex: 1; gap: 3px; }
+.profile-head h1 { font-size: 20px; }
+.profile-head button { border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.profile-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.profile-metrics div { display: flex; flex-direction: column; align-items: center; padding: 14px 10px; background: var(--canvas); border-radius: 10px; text-align: center; }
+.profile-metrics strong { font-size: 18px; color: var(--teal-600); }
+.profile-metrics span { color: var(--muted); font-size: 10px; margin-top: 2px; }
+.settings-card { border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; background: white; }
+.settings-card h2 { font-size: 11px; letter-spacing: .06em; color: var(--muted); margin-bottom: 14px; }
+.settings-card p { display: flex; justify-content: space-between; align-items: center; padding-block: 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.settings-card p:last-child { border-bottom: 0; }
+.settings-card p span { color: var(--muted); }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; padding-block: 10px; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border-bottom: 0; }
+.toggle-row span { display: flex; flex-direction: column; gap: 2px; }
+.toggle-row b { font-size: 13px; }
+.toggle-row small { color: var(--muted); font-size: 10px; }
+.logout-button { width: 100%; min-height: 48px; border: 1px solid rgba(220,38,38,.3); border-radius: 10px; background: rgba(220,38,38,.06); color: #dc2626; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 14px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
