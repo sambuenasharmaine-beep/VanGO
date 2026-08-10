@@ -43,7 +43,15 @@ async function findUserByEmail(client: SupabaseClient, email: string): Promise<U
 
 async function ensureAuthUser(client: SupabaseClient, email: string, password: string, fullName: string) {
   const existing = await findUserByEmail(client, email);
-  if (existing) return existing;
+  if (existing) {
+    const { error: updateError } = await client.auth.admin.updateUserById(existing.id, {
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
+    if (updateError) throw updateError;
+    return existing;
+  }
   const { data, error } = await client.auth.admin.createUser({
     email,
     password,
