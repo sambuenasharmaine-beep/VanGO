@@ -432,10 +432,12 @@ input::placeholder { color: var(--soft); }
   .passenger-frame { display: flex; width: min(100%, 1060px); min-height: calc(100vh - 72px); flex-direction: column; overflow: visible; border-radius: 18px; }
   .passenger-header { order: 0; min-height: 74px; border-radius: 18px 18px 0 0; padding-inline: 30px; }
   .passenger-header > strong { font-size: 16px; }
-  .passenger-tabs { position: static; z-index: auto; order: 1; display: flex; min-height: 0; justify-content: center; gap: 6px; border-top: 0; border-bottom: 1px solid var(--border); padding: 12px 30px; background: transparent; backdrop-filter: none; }
-  .passenger-tabs a { min-height: 42px; flex-direction: row; gap: 9px; padding: 0 18px; }
-  .passenger-tabs a > span { font-size: 13px; }
-  .passenger-tabs small { font-size: 12px; }
+  .passenger-tabs { position: static; z-index: 10; order: 1; display: flex; min-height: 0; justify-content: center; gap: 6px; border-top: 0; border-bottom: 1px solid var(--border); padding: 12px 30px; background: white; backdrop-filter: none; }
+  .passenger-tabs a { display: inline-flex; align-items: center; min-height: 42px; flex-direction: row; gap: 9px; padding: 0 18px; border-radius: 9px; color: var(--muted); font-size: 13px; font-weight: 500; text-decoration: none; cursor: pointer; pointer-events: auto; transition: all .16s ease; }
+  .passenger-tabs a:hover { background: var(--teal-50); color: var(--teal-600); }
+  .passenger-tabs a.active { background: #e7f0f3; color: #0e4d64; font-weight: 700; }
+  .passenger-tabs a > span { font-size: 14px; }
+  .passenger-tabs small { font-size: 13px; font-weight: inherit; }
   .passenger-content { order: 2; min-height: 0; flex: 1; padding: 32px 30px 44px; }
 
   /* Lists become columns instead of one long phone-width ribbon. */

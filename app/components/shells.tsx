@@ -21,25 +21,29 @@ export function PassengerShell({ children, title, back }: { children: ReactNode;
   const { profile } = useAuth();
   const initials = (profile?.full_name ?? "Passenger").split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
   return (
-    <AuthGate workspace="passenger"><div className="passenger-canvas">
-      <div className="passenger-frame">
-        <header className="passenger-header">
-          {back ? <Link className="back-button" href={back} aria-label="Go back">←</Link> : <Brand />}
-          {title ? <strong>{title}</strong> : null}
-          <Link className="avatar-button" href="/passenger/profile" aria-label="Open profile">{initials}</Link>
-        </header>
-        <main className="passenger-content">{children}</main>
-        {passengerNav.some(([, href]) => path === href) ? (
+    <AuthGate workspace="passenger">
+      <div className="passenger-canvas">
+        <div className="passenger-frame">
+          <header className="passenger-header">
+            {back ? <Link className="back-button" href={back} aria-label="Go back">←</Link> : <Brand />}
+            {title ? <strong>{title}</strong> : null}
+            <Link className="avatar-button" href="/passenger/profile" aria-label="Open profile">{initials}</Link>
+          </header>
           <nav className="passenger-tabs" aria-label="Passenger navigation">
-            {passengerNav.map(([label, href, icon]) => (
-              <Link className={path === href ? "active" : ""} href={href} key={href}>
-                <span aria-hidden="true">{icon}</span><small>{label}</small>
-              </Link>
-            ))}
+            {passengerNav.map(([label, href, icon]) => {
+              const isActive = path === href || (href !== "/passenger" && path.startsWith(href));
+              return (
+                <Link className={isActive ? "active" : ""} href={href} key={href}>
+                  <span aria-hidden="true">{icon}</span>
+                  <small>{label}</small>
+                </Link>
+              );
+            })}
           </nav>
-        ) : null}
+          <main className="passenger-content">{children}</main>
+        </div>
       </div>
-    </div></AuthGate>
+    </AuthGate>
   );
 }
 
