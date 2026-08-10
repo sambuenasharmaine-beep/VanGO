@@ -36,10 +36,10 @@ export function PassengerDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [unread, setUnread] = useState(0);
   const [error, setError] = useState("");
-  const [origin, setOrigin] = useState("cubao");
-  const [destination, setDestination] = useState("baguio");
-  const [travelDate, setTravelDate] = useState("2026-08-12");
-  const [passengers, setPassengers] = useState(2);
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [travelDate, setTravelDate] = useState("");
+  const [passengers, setPassengers] = useState(1);
   const router = useRouter();
 
   const load = useCallback(async () => {
@@ -70,8 +70,8 @@ export function PassengerDashboard() {
     <PassengerShell>
       <section className="passenger-greeting">
         <div>
-          <span>Magandang umaga,</span>
-          <h1>{profile?.full_name || "Juan Miguel"}</h1>
+          <span>Welcome back,</span>
+          <h1>{profile?.full_name || "Passenger"}</h1>
         </div>
         <Link className="weather-chip" href="/passenger/alerts">
           🔔 {unread} unread
@@ -82,7 +82,7 @@ export function PassengerDashboard() {
         <div className="route-fields">
           <div>
             <span>From</span>
-            <strong>Cubao, Quezon City</strong>
+            <strong>Select terminal</strong>
           </div>
           <button
             className="swap-button"
@@ -98,63 +98,23 @@ export function PassengerDashboard() {
           </button>
           <div>
             <span>To</span>
-            <strong>Baguio City, Benguet</strong>
+            <strong>Select terminal</strong>
           </div>
         </div>
         <div className="search-row">
           <div>
             <span>Travel date</span>
-            <strong>12 Aug, Wed</strong>
+            <strong>Choose date</strong>
           </div>
           <div>
             <span>Passengers</span>
-            <strong>{passengers} seats</strong>
+            <strong>{passengers} seat{passengers === 1 ? "" : "s"}</strong>
           </div>
         </div>
         <button className="button button-primary large full" type="submit">
           🔍 Search vans
         </button>
       </form>
-
-      <section className="mobile-section">
-        <div className="section-mini-title">
-          <h2>Recent searches</h2>
-        </div>
-        <div className="filter-row">
-          <button type="button" className="active">
-            Alabang → Batangas City · 12 Aug, 1 seat
-          </button>
-          <button type="button">
-            PITX → Naic, Cavite · 13 Aug, 2 seats
-          </button>
-        </div>
-      </section>
-
-      <section className="mobile-section">
-        <div className="section-mini-title">
-          <h2>Saved routes</h2>
-        </div>
-        <div className="saved-route-grid">
-          <Link href="/passenger/trips?origin=cubao&destination=baguio">
-            <small>SAVED</small>
-            <strong>Cubao → Baguio</strong>
-            <span>From ₱650</span>
-          </Link>
-          <Link href="/passenger/trips?origin=alabang&destination=batangas">
-            <small>SAVED</small>
-            <strong>Alabang → Batangas</strong>
-            <span>From ₱480</span>
-          </Link>
-        </div>
-      </section>
-
-      <div className="promo-strip">
-        <b>SUMMER100</b>
-        <div>
-          <strong>₱100 off your next Baguio trip</strong>
-          <span>Minimum 2 seats · Valid until 31 Aug</span>
-        </div>
-      </div>
 
       <section className="mobile-section">
         <div className="section-mini-title">
@@ -659,32 +619,11 @@ export function LiveBookings() {
               ))}
             </div>
           ) : (
-            <article className="booking-card featured">
-              <div className="booking-card-top">
-                <Status tone="success">CONFIRMED</Status>
-                <Mono>VG-8H2K41</Mono>
-              </div>
-              <span>DEPARTS IN 18 HOURS</span>
-              <h2>Cubao → Baguio</h2>
-              <p>12 AUG 2026 · 04:30 AM</p>
-              <div className="booking-meta">
-                <span>
-                  <small>VAN OPERATOR</small>
-                  <b>Victory Liner</b>
-                </span>
-                <span>
-                  <small>SEATS</small>
-                  <b className="mono">3A, 3B</b>
-                </span>
-                <span>
-                  <small>TOTAL</small>
-                  <b className="mono">₱1,230.00</b>
-                </span>
-              </div>
-              <Link className="button button-primary full" href="/passenger/ticket?reference=VG-8H2K41">
-                View e-ticket
-              </Link>
-            </article>
+            <div className="real-empty">
+              <h3>No upcoming bookings</h3>
+              <p>Your real VanGO bookings will appear here after you reserve and confirm a trip.</p>
+              <Link className="button button-primary" href="/passenger/trips">Book a trip</Link>
+            </div>
           )}
         </>
       ) : (
@@ -699,8 +638,22 @@ export function LiveBookings() {
 
 export function LiveProfile() {
   const { profile, refreshContext, signOut } = useAuth();
+  const [stats, setStats] = useState({ tripsTaken: 0, totalSpent: 0 });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  const loadStats = useCallback(async () => {
+    const client = getSupabaseBrowserClient();
+    if (!client || !profile?.id) return;
+    const { data } = await client.from("bookings").select("total,booking_status").eq("passenger_id", profile.id);
+    if (data) {
+      const confirmed = data.filter((b) => b.booking_status === "confirmed" || b.booking_status === "completed");
+      const total = confirmed.reduce((acc, b) => acc + Number(b.total || 0), 0);
+      setStats({ tripsTaken: confirmed.length, totalSpent: total });
+    }
+  }, [profile?.id]);
+
+  useEffect(() => { void loadStats(); }, [loadStats]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -712,59 +665,47 @@ export function LiveProfile() {
     else { setMessage("Profile updated."); await refreshContext(); }
   }
 
+  const initials = (profile?.full_name || "Passenger").split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+
   return (
     <PassengerShell>
       <div className="profile-head">
-        <div className="profile-avatar">JM</div>
+        <div className="profile-avatar">{initials}</div>
         <div>
-          <h1>{profile?.full_name || "Juan Miguel Dela Cruz"}</h1>
-          <Mono>{profile?.mobile_e164 || "+63 917 845 2218"}</Mono>
+          <h1>{profile?.full_name || "Passenger"}</h1>
+          <Mono>{profile?.mobile_e164 || "No mobile number"}</Mono>
         </div>
-        <button type="button">Edit</button>
       </div>
 
       <div className="profile-metrics">
         <div>
-          <strong>24</strong>
+          <strong>{stats.tripsTaken}</strong>
           <span>Trips taken</span>
         </div>
         <div>
-          <strong>₱14K</strong>
+          <strong>₱{stats.totalSpent.toLocaleString("en-PH")}</strong>
           <span>Spent in 2026</span>
         </div>
         <div>
-          <strong>4.9</strong>
+          <strong>5.0</strong>
           <span>Your rating</span>
         </div>
       </div>
 
-      <div className="settings-card">
+      <form className="settings-card" onSubmit={save}>
         <h2>PERSONAL INFO</h2>
-        <p>
-          <span>Email</span>
-          <b>juan.delacruz@gmail.com</b>
-        </p>
-        <p>
-          <span>Mobile</span>
-          <b>+63 917 845 2218</b>
-        </p>
-        <p>
-          <span>PWD / senior ID</span>
-          <small>Not added</small>
-        </p>
-      </div>
-
-      <div className="settings-card">
-        <h2>SAVED PAYMENT</h2>
-        <p>
-          <span>GCash · Juan D.</span>
-          <small>Default</small>
-        </p>
-        <p>
-          <span>BPI Debit</span>
-          <small>Card</small>
-        </p>
-      </div>
+        <label className="field">
+          <span>Full name</span>
+          <input name="full_name" defaultValue={profile?.full_name ?? ""} required />
+        </label>
+        <label className="field">
+          <span>Mobile number</span>
+          <input name="mobile_e164" type="tel" defaultValue={profile?.mobile_e164 ?? ""} />
+        </label>
+        {message ? <div className="form-message success">{message}</div> : null}
+        {error ? <div className="form-message error">{error}</div> : null}
+        <button className="button button-primary full" type="submit">Save profile</button>
+      </form>
 
       <div className="settings-card">
         <h2>NOTIFICATIONS</h2>
@@ -780,12 +721,6 @@ export function LiveProfile() {
             <b>Delay and gate changes</b>
           </span>
           <input type="checkbox" defaultChecked />
-        </div>
-        <div className="toggle-row">
-          <span>
-            <b>Promotions and offers</b>
-          </span>
-          <input type="checkbox" />
         </div>
       </div>
 

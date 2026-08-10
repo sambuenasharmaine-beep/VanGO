@@ -13,13 +13,13 @@ export function AuthForm() {
   const returnTo = searchParams.get("returnTo");
   const recoveryCode = searchParams.get("code");
   const [mode, setMode] = useState<Mode>(initialMode === "register" || initialMode === "forgot" || initialMode === "reset" ? initialMode : "signin");
-  const [fullName, setFullName] = useState("Juan Miguel Dela Cruz");
-  const [mobile, setMobile] = useState("+63 917 845 2218");
-  const [email, setEmail] = useState("juan.delacruz@gmail.com");
+  const [fullName, setFullName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [otpStep, setOtpStep] = useState(false);
-  const [otpCode, setOtpCode] = useState(["4", "8", "2", "1", "", ""]);
+  const [otpCode, setOtpCode] = useState(["", "", "", "", "", ""]);
   const [busy, setBusy] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [recoveryReady, setRecoveryReady] = useState(initialMode !== "reset");
