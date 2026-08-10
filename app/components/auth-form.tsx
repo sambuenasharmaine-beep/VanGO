@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "../../lib/supabase";
@@ -101,7 +100,7 @@ export function AuthForm() {
       <div className="auth-options">
         {mode === "signin" ? <><button type="button" onClick={() => setMode("forgot")}>Forgot password?</button><button type="button" onClick={() => setMode("register")}>Create passenger account</button></> : <button type="button" onClick={() => setMode("signin")}>Back to sign in</button>}
       </div>
-      <p className="auth-policy">By continuing, you agree to the booking and privacy terms. <Link href="/">Return to trip search</Link></p>
+      <p className="auth-policy">By continuing, you agree to the booking and privacy terms. <a href="/">Return to trip search</a></p>
     </form>
   );
 }
