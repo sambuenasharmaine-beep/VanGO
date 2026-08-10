@@ -31,14 +31,21 @@ type Notification = { id: string; type: string; title: string; body: string; act
 
 function errorText(value: unknown) { return value instanceof Error ? value.message : "The database request could not be completed."; }
 
+type Terminal = { id: string; name: string; city: string };
+
 export function PassengerDashboard() {
   const { profile } = useAuth();
+  const [terminals, setTerminals] = useState<Terminal[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [unread, setUnread] = useState(0);
   const [error, setError] = useState("");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [travelDate, setTravelDate] = useState("");
+  const [travelDate, setTravelDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  });
   const [passengers, setPassengers] = useState(1);
   const router = useRouter();
 
@@ -46,12 +53,20 @@ export function PassengerDashboard() {
     const client = getSupabaseBrowserClient();
     if (!client) return;
     try {
-      const [bookingResult, notificationResult] = await Promise.all([
+      const [terminalResult, bookingResult, notificationResult] = await Promise.all([
+        client.from("terminals").select("id,name,city").eq("is_active", true).order("city"),
         client.from("bookings").select("id,reference,booking_status,payment_status,total,created_at,trip_id").order("created_at", { ascending: false }).limit(3),
         client.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
       ]);
+      if (terminalResult.error) throw terminalResult.error;
       if (bookingResult.error) throw bookingResult.error;
       if (notificationResult.error) throw notificationResult.error;
+      const termRows = (terminalResult.data ?? []) as Terminal[];
+      setTerminals(termRows);
+      if (termRows.length > 1) {
+        setOrigin((curr) => curr || termRows[0].id);
+        setDestination((curr) => curr || termRows[1].id);
+      }
       setBookings((bookingResult.data ?? []) as Booking[]);
       setUnread(notificationResult.count ?? 0);
     } catch (reason) {
@@ -59,11 +74,11 @@ export function PassengerDashboard() {
     }
   }, []);
   useEffect(() => { const timer = window.setTimeout(() => void load(), 0); return () => window.clearTimeout(timer); }, [load]);
-  useLiveTables(["bookings", "notifications"], load);
+  useLiveTables(["bookings", "notifications", "terminals"], load);
 
   function handleSearch(event: FormEvent) {
     event.preventDefault();
-    router.push(`/passenger/trips?origin=${origin}&destination=${destination}&date=${travelDate}&passengers=${passengers}`);
+    router.push(`/passenger/trips?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&date=${encodeURIComponent(travelDate)}&passengers=${passengers}`);
   }
 
   return (
@@ -80,10 +95,21 @@ export function PassengerDashboard() {
 
       <form className="search-card" onSubmit={handleSearch}>
         <div className="route-fields">
-          <div>
+          <label className="search-field">
             <span>From</span>
-            <strong>Select terminal</strong>
-          </div>
+            <select
+              value={origin}
+              onChange={(e) => setOrigin(e.target.value)}
+              className="search-select"
+            >
+              <option value="">Select terminal</option>
+              {terminals.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.city} · {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             className="swap-button"
             type="button"
@@ -96,20 +122,47 @@ export function PassengerDashboard() {
           >
             ⇄
           </button>
-          <div>
+          <label className="search-field">
             <span>To</span>
-            <strong>Select terminal</strong>
-          </div>
+            <select
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="search-select"
+            >
+              <option value="">Select terminal</option>
+              {terminals.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.city} · {t.name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         <div className="search-row">
-          <div>
+          <label className="search-field">
             <span>Travel date</span>
-            <strong>Choose date</strong>
-          </div>
-          <div>
+            <input
+              type="date"
+              min={new Date().toISOString().slice(0, 10)}
+              value={travelDate}
+              onChange={(e) => setTravelDate(e.target.value)}
+              className="search-input"
+            />
+          </label>
+          <label className="search-field">
             <span>Passengers</span>
-            <strong>{passengers} seat{passengers === 1 ? "" : "s"}</strong>
-          </div>
+            <select
+              value={passengers}
+              onChange={(e) => setPassengers(Number(e.target.value))}
+              className="search-select"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                <option key={n} value={n}>
+                  {n} seat{n === 1 ? "" : "s"}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         <button className="button button-primary large full" type="submit">
           🔍 Search vans
