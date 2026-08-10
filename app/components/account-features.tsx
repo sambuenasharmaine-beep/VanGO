@@ -16,7 +16,7 @@ type Booking = { id: string; reference: string; booking_status: string; payment_
 type Refund = { id: string; booking_id: string; status: string; reason: string; amount: number | string; created_at: string };
 type Notification = { id: string; type: string; title: string; body: string; action_path: string | null; read_at: string | null; created_at: string };
 
-const bookingSelect = "id,reference,booking_status,payment_status,subtotal,fees,discount,total,created_at,trips(departure_at,arrival_at,gate,organizations(name),routes(origin:terminals!routes_origin_terminal_id_fkey(name,city),destination:terminals!routes_destination_terminal_id_fkey(name,city)))";
+const bookingSelect = "id,reference,booking_status,payment_status,subtotal,fees,discount,total,created_at,trips:trip_id(departure_at,arrival_at,gate,organizations(name),routes(origin:terminals!routes_origin_terminal_id_fkey(name,city),destination:terminals!routes_destination_terminal_id_fkey(name,city)))";
 
 function BookingRoute({ booking }: { booking: Booking }) {
   const trip = one(booking.trips); const route = one(trip?.routes); const origin = one(route?.origin); const destination = one(route?.destination);
